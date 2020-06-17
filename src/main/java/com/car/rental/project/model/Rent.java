@@ -17,6 +17,7 @@ public class Rent {
     private String godzinaWypozyczenia;
     private String godzinaOddania;
     private String status; //rezerwacja lub wypozyczenie
+    private String orderId;
 
 
     @ManyToMany(cascade = { CascadeType.MERGE, CascadeType.PERSIST })
@@ -132,5 +133,13 @@ public class Rent {
 
     public void setFault(Set<Fault> fault) {
         this.fault = fault;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 }

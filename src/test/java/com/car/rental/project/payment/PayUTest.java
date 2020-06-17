@@ -38,7 +38,6 @@ class PayUTest {
         String expectedHost = "merch-prod.snd.payu.com";
         String redirectUri = payUConnection.payUUrl(order);
         URI uri = new URI(redirectUri);
-        System.out.println(uri.getRawQuery());
         String host = uri.getHost();
         assertEquals(expectedHost,host);
     }

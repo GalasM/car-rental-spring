@@ -70,6 +70,12 @@
 
 <main class="main">
     <div class="column">
+        <c:if test="${payment eq true}">
+            <div class="alert alert-success">Zamówienie zostało opłacone!</div>
+        </c:if>
+        <c:if test="${payment eq false}">
+            <div class="alert alert-danger">Wystąpił błąd podczas płatności. Spróbuj ponownie.</div>
+        </c:if>
         <c:if test="${changed eq true}">
             <div class="alert alert-success">Hasło zostało zmienione!</div>
         </c:if>
@@ -120,6 +126,11 @@
                 <td>${rent.status}</td>
                 <td>${rent.kwota}</td>
                 <td>
+                    <c:if test="${rent.status == 'Błąd płatności'}">
+                        <form action="${contextPath}/payRes/${rent.getId()}" method="post">
+                            <button class="btn btn-outline-success btn-sm" type="submit">Zapłać ponownie</button>
+                        </form>
+                    </c:if>
                     <c:if test="${rent.status == 'Rezerwacja'}">
                         <form action="${contextPath}/payRes/${rent.getId()}" method="post">
                             <button class="btn btn-outline-success btn-sm" type="submit">Opłać rezerwację</button>

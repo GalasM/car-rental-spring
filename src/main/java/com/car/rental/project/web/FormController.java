@@ -5,15 +5,26 @@ import com.car.rental.project.payment.Order;
 import com.car.rental.project.payment.Product;
 import com.car.rental.project.repository.*;
 import com.car.rental.project.service.OfferService;
+import net.bytebuddy.utility.RandomString;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -61,7 +72,7 @@ public class FormController {
         c.setBodyType(carForm.getParameter("bodyType"));
         c.setNumberOfPlaces(carForm.getParameter("numberOfPlaces"));
         carRepository.save(c);
-        if(photos!=null) {//
+        if (photos != null) {//
 
             photos.forEach(x -> {
                 try {
@@ -90,8 +101,8 @@ public class FormController {
     @GetMapping("/offerform")
     public String offerForm(Model model) {
         List<Car> cars = carRepository.find();
-        List<Offer>offers = offerService.findAll();
-        model.addAttribute ("offerList", offers);
+        List<Offer> offers = offerService.findAll();
+        model.addAttribute("offerList", offers);
         model.addAttribute("cars", cars);
         return "offerform";
     }
@@ -110,7 +121,7 @@ public class FormController {
             Location newLocation = new Location();
             locationRepository.save(newLocation);
             List<Location> locations = locationRepository.findAll();
-            model.addAttribute("locations",locations);
+            model.addAttribute("locations", locations);
             model.addAttribute("id", newLocation.getId());
         }
         return "locationform";
@@ -220,7 +231,8 @@ public class FormController {
         //add order
         List<Product> list = new ArrayList<>();
         list.add(new Product(nameCar, kwota.toString()));
-        Order order = new Order(r.getId().toString(), "Wypożyczenie " + nameCar, kwota.toString(), list);
+        String extOrderId  = r.getId().toString().concat("-").concat(RandomString.make(10));
+        Order order = new Order(extOrderId, "Wypożyczenie " + nameCar, kwota.toString(), list);
 
 
         //show information in podsumowanieWypozyczenia.jsp
@@ -240,11 +252,11 @@ public class FormController {
     public Long calculatePriceForRent(int price, long numberOfDays, String rentHour, String returnHour) {
         Long kwota;
 
-        if(numberOfDays < 0) {
+        if (numberOfDays < 0) {
             throw new IllegalArgumentException("Number of days must be >= 0");
         }
 
-        if(numberOfDays > 365) {
+        if (numberOfDays > 365) {
             throw new IllegalArgumentException("Number of days must be <= 365");
 
         }
@@ -420,9 +432,16 @@ public class FormController {
     }
 
     @GetMapping("/callback/{id}")
-    public String callback(@PathVariable String id, HttpServletRequest request) {
+    public String callback(@PathVariable String id, HttpServletRequest request, RedirectAttributes redirectAttributes) {
         Rent r = rentRepository.findById(Long.valueOf(id)).orElseThrow();
-        r.setStatus("Opłacone");
+        if (request.getParameter("error") != null && request.getParameter("error").equals("501")) {
+            r.setStatus("Błąd płatności");
+            redirectAttributes.addFlashAttribute("payment","false");
+
+        } else {
+            r.setStatus("Opłacone");
+            redirectAttributes.addFlashAttribute("payment","true");
+        }
         rentRepository.save(r);
         String userName = request.getUserPrincipal().getName();
         return "redirect:/panel/" + userName;
@@ -486,7 +505,8 @@ public class FormController {
         //add order
         List<Product> list = new ArrayList<>();
         list.add(new Product(nameCar, Integer.toString(kwota)));
-        Order order = new Order(r.getId().toString(), "Wypożyczenie " + nameCar, Integer.toString(kwota), list);
+        String extOrderId  = r.getId().toString().concat("-").concat(RandomString.make(10));
+        Order order = new Order(extOrderId, "Wypożyczenie " + nameCar, Integer.toString(kwota), list);
 
         String rentLocation = r.getMiejsceWypozyczenia();
         String returnLocation = r.getMiejsceOddania();

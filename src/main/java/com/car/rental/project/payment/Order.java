@@ -1,6 +1,8 @@
 package com.car.rental.project.payment;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class Order {
     private String continueUrl;
@@ -14,7 +16,16 @@ public class Order {
 
 
     public Order(String extOrderId,String description, String totalAmount, List<Product> products) {
-        this.continueUrl = "http://localhost:9090/callback/"+extOrderId;
+        Optional<String> callbackIdOpt = Arrays.stream(extOrderId.split("-")).findFirst();
+        String callbackId = "";
+        if(callbackIdOpt.isPresent()){
+            callbackId = callbackIdOpt.get();
+            this.continueUrl = "http://localhost:9090/callback/"+callbackId;
+        }
+        else {
+            this.continueUrl = "http://localhost:9090/";
+        }
+
         this.extOrderId = extOrderId;
         this.customerIp = "127.0.0.1";
         this.merchantPosId = "383389";
@@ -81,5 +92,13 @@ public class Order {
 
     public void setProducts(List<Product> products) {
         this.products = products;
+    }
+
+    public String getExtOrderId() {
+        return extOrderId;
+    }
+
+    public void setExtOrderId(String extOrderId) {
+        this.extOrderId = extOrderId;
     }
 }

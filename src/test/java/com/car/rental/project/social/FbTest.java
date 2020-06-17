@@ -28,7 +28,7 @@ public class FbTest {
     @Test
     public void shouldCreateCorrectFbAuthUrl() {
         final String FB_APP_ID ="";
-        final String REDIRECT_URI = "http://localhost:9090/fblogin";
+        final String REDIRECT_URI = "";
         String authURL = "http://www.facebook.com/dialog/oauth?" + "client_id="
                 + FB_APP_ID + "&redirect_uri="
                 + URLEncoder.encode(REDIRECT_URI, StandardCharsets.UTF_8)
